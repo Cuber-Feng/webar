@@ -16,29 +16,84 @@
             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
             <a-assets>
-                <img id="demoImage" src="./img/demo.jpg" />
-                <video id="my-video" src="./video/output.webm" preload="auto" autoplay loop muted playsinline
-                    crossorigin="anonymous"></video>
-
-                <a-asset-item id="MindARDemo3D"
-                    src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/softmind/scene.gltf"></a-asset-item>
+                <video id="video" src="./video/demo.mp4" preload="auto" loop muted playsinline crossorigin="anonymous"
+                    webkit-playsinline></video>
             </a-assets>
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-            <!--The entity that show on the detected image-->
             <a-entity mindar-image-target="targetIndex: 0">
-                <a-plane src="#demoImage" position="0 0 0" height="0.75" width="1" rotation="0 0 0"></a-plane>
-                <a-video src="#my-video" width="0.734" height="0.648" position="0 0.1 0.1" transparent="true"
-                    material="shader: flat; transparent: true; side: double"></a-video>
-                <!-- <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#MindARDemo3D"
-                    animation="property: position; to: 0 0.5 0.5; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"></a-gltf-model>
-
-                <a-gltf-model rotation="0 0 0 " position="0 1 0.1" scale="0.1 0.1 0.1" src="./gltf/simple_model.gltf"></a-gltf-model> -->
+                <a-plane id="video-plane" position="0 0 0" rotation="0 0 0" width="1" height="0.5"></a-plane>
             </a-entity>
 
         </a-scene>
+
+        <script>
+            AFRAME.registerComponent('video-alpha-shader', {
+                schema: {
+                    videoEl: { type: 'selector' }
+                },
+                init: function () {
+                    const video = this.data.videoEl;
+                    video.play();
+
+                    const videoTexture = new THREE.VideoTexture(video);
+                    videoTexture.minFilter = THREE.LinearFilter;
+                    videoTexture.magFilter = THREE.LinearFilter;
+                    videoTexture.format = THREE.RGBAFormat;
+                    videoTexture.generateMipmaps = false;
+
+                    const vertexShader = `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+          }
+        `;
+
+                    const fragmentShader = `
+          uniform sampler2D videoTex;
+          varying vec2 vUv;
+
+          void main() {
+            vec2 uvColor = vec2(vUv.x, vUv.y * 0.5);
+            vec2 uvAlpha = vec2(vUv.x, vUv.y * 0.5 + 0.5);
+
+            vec4 color = texture2D(videoTex, uvColor);
+            float alpha = texture2D(videoTex, uvAlpha).r;
+
+            // Gamma校正(可选，看效果调整)
+            color.rgb = pow(color.rgb, vec3(2.2));
+
+            gl_FragColor = vec4(color.rgb, alpha);
+          }
+        `;
+
+                    const uniforms = {
+                        videoTex: { value: videoTexture }
+                    };
+
+                    const material = new THREE.ShaderMaterial({
+                        uniforms: uniforms,
+                        vertexShader: vertexShader,
+                        fragmentShader: fragmentShader,
+                        transparent: true,
+                        side: THREE.DoubleSide
+                    });
+
+                    this.el.getObject3D('mesh').material = material;
+                }
+            });
+
+            window.addEventListener('load', () => {
+                const videoEl = document.querySelector('#video');
+                const videoPlane = document.querySelector('#video-plane');
+                videoPlane.setAttribute('video-alpha-shader', { videoEl: videoEl });
+            });
+        </script>
     </main>
+
+
 </body>
 
 </html>
