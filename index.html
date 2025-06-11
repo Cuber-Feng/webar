@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="./js/aframe.min.js"></script>
     <script src="./js/mindar-image-aframe.prod.js"></script>
+    <script src="./js/video.js"></script>
 </head>
 
 <body>
@@ -16,6 +17,8 @@
 
             <a-assets>
                 <img id="demoImage" src="./img/demo.jpg" />
+                <video id="my-video" src="./video/demo.mp4" preload="auto" autoplay loop muted playsinline crossorigin="anonymous"></video>
+
                 <a-asset-item id="MindARDemo3D"
                     src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/softmind/scene.gltf"></a-asset-item>
             </a-assets>
@@ -25,10 +28,11 @@
             <!--The entity that show on the detected image-->
             <a-entity mindar-image-target="targetIndex: 0">
                 <a-plane src="#demoImage" position="0 0 0" height="0.75" width="1" rotation="0 0 0"></a-plane>
-                <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#MindARDemo3D"
+                <a-video src="#my-video" width="1" height="0.56" position="0 0 0.1"></a-video>
+                <!-- <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#MindARDemo3D"
                     animation="property: position; to: 0 0.5 0.5; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"></a-gltf-model>
 
-                <a-gltf-model rotation="0 0 0 " position="0 1 0.1" scale="0.1 0.1 0.1" src="./gltf/simple_model.gltf"></a-gltf-model>
+                <a-gltf-model rotation="0 0 0 " position="0 1 0.1" scale="0.1 0.1 0.1" src="./gltf/simple_model.gltf"></a-gltf-model> -->
             </a-entity>
 
         </a-scene>
