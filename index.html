@@ -18,12 +18,15 @@
             <a-assets>
                 <video id="video" src="./video/demo.mp4" preload="auto" loop muted playsinline crossorigin="anonymous"
                     webkit-playsinline></video>
+                <video id="video" src="./video/output.webm" preload="auto" loop muted playsinline crossorigin="anonymous"
+                    webkit-playsinline></video>
             </a-assets>
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
             <a-entity mindar-image-target="targetIndex: 0">
                 <a-plane id="video-plane" position="0 0 0" rotation="0 0 0" width="1" height="0.5"></a-plane>
+                
             </a-entity>
 
         </a-scene>
@@ -52,22 +55,29 @@
         `;
 
                     const fragmentShader = `
-          uniform sampler2D videoTex;
-          varying vec2 vUv;
+  uniform sampler2D videoTex;
+  varying vec2 vUv;
 
-          void main() {
-            vec2 uvColor = vec2(vUv.x, vUv.y * 0.5);
-            vec2 uvAlpha = vec2(vUv.x, vUv.y * 0.5 + 0.5);
-
-            vec4 color = texture2D(videoTex, uvColor);
-            float alpha = texture2D(videoTex, uvAlpha).r;
-
-            // Gamma校正(可选，看效果调整)
-            color.rgb = pow(color.rgb, vec3(2.2));
-
-            gl_FragColor = vec4(color.rgb, alpha);
-          }
-        `;
+  void main() {
+    // 获取RGB部分（上半部分）
+    vec2 uvColor = vec2(vUv.x, vUv.y * 0.5);
+    vec4 color = texture2D(videoTex, uvColor);
+    
+    // 获取Alpha部分（下半部分）
+    vec2 uvAlpha = vec2(vUv.x, vUv.y * 0.5 + 0.5);
+    float alpha = texture2D(videoTex, uvAlpha).r;
+    
+    // 增强Alpha值（如果看起来太透明）
+    alpha = pow(alpha, 0.5); // 调整这个值：>1会降低透明度，<1会增加透明度
+    
+    // 输出最终颜色（保留RGB，应用Alpha）
+    gl_FragColor = vec4(color.rgb, alpha);
+    
+    // 调试用：可以取消下面注释查看不同部分
+    // gl_FragColor = vec4(color.rgb, 1.0); // 只看RGB部分
+    // gl_FragColor = vec4(vec3(alpha), 1.0); // 只看Alpha部分
+  }
+`;
 
                     const uniforms = {
                         videoTex: { value: videoTexture }
