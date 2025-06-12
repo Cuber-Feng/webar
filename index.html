@@ -16,94 +16,19 @@
             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
             <a-assets>
-                <video id="video" src="./video/demo.mp4" preload="auto" loop muted playsinline crossorigin="anonymous"
-                    webkit-playsinline></video>
-                <video id="video" src="./video/output.webm" preload="auto" loop muted playsinline crossorigin="anonymous"
-                    webkit-playsinline></video>
+                <img id="demoImage" src="./img/demo.jpg" />
+                <video id="my-video" src="./video/output.webm" preload="auto" autoplay loop muted playsinline crossorigin="anonymous"></video>
             </a-assets>
 
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+            <!--The entity that show on the detected image-->
             <a-entity mindar-image-target="targetIndex: 0">
-                <a-plane id="video-plane" position="0 0 0" rotation="0 0 0" width="1" height="0.5"></a-plane>
-                
+                <a-video src="#my-video" width="0.734" height="0.648" position="0 0.1 0.01"></a-video>
             </a-entity>
 
         </a-scene>
-
-        <script>
-            AFRAME.registerComponent('video-alpha-shader', {
-                schema: {
-                    videoEl: { type: 'selector' }
-                },
-                init: function () {
-                    const video = this.data.videoEl;
-                    video.play();
-
-                    const videoTexture = new THREE.VideoTexture(video);
-                    videoTexture.minFilter = THREE.LinearFilter;
-                    videoTexture.magFilter = THREE.LinearFilter;
-                    videoTexture.format = THREE.RGBAFormat;
-                    videoTexture.generateMipmaps = false;
-
-                    const vertexShader = `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-          }
-        `;
-
-                    const fragmentShader = `
-  uniform sampler2D videoTex;
-  varying vec2 vUv;
-
-  void main() {
-    // 获取RGB部分（上半部分）
-    vec2 uvColor = vec2(vUv.x, vUv.y * 0.5);
-    vec4 color = texture2D(videoTex, uvColor);
-    
-    // 获取Alpha部分（下半部分）
-    vec2 uvAlpha = vec2(vUv.x, vUv.y * 0.5 + 0.5);
-    float alpha = texture2D(videoTex, uvAlpha).r;
-    
-    // 增强Alpha值（如果看起来太透明）
-    alpha = pow(alpha, 0.5); // 调整这个值：>1会降低透明度，<1会增加透明度
-    
-    // 输出最终颜色（保留RGB，应用Alpha）
-    gl_FragColor = vec4(color.rgb, alpha);
-    
-    // 调试用：可以取消下面注释查看不同部分
-    // gl_FragColor = vec4(color.rgb, 1.0); // 只看RGB部分
-    // gl_FragColor = vec4(vec3(alpha), 1.0); // 只看Alpha部分
-  }
-`;
-
-                    const uniforms = {
-                        videoTex: { value: videoTexture }
-                    };
-
-                    const material = new THREE.ShaderMaterial({
-                        uniforms: uniforms,
-                        vertexShader: vertexShader,
-                        fragmentShader: fragmentShader,
-                        transparent: true,
-                        side: THREE.DoubleSide
-                    });
-
-                    this.el.getObject3D('mesh').material = material;
-                }
-            });
-
-            window.addEventListener('load', () => {
-                const videoEl = document.querySelector('#video');
-                const videoPlane = document.querySelector('#video-plane');
-                videoPlane.setAttribute('video-alpha-shader', { videoEl: videoEl });
-            });
-        </script>
     </main>
-
-
 </body>
 
 </html>
